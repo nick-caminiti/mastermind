@@ -1,5 +1,43 @@
+module Feedback
+  def determine_feedback(guess_array)
+    @feedback_helper = { code: [], guess: [], feedback: [] }
+    find_right_create_helper(guess_array)
+    find_detail_for_wrong unless @feedback_helper[:feedback].count == 4
+    @feedback_helper[:feedback]
+  end
+
+  def find_right_create_helper(guess_array)
+    p guess_array
+    guess_array.each_with_index do |guess, index|
+      if guess.to_i == @code[index].to_i
+        @feedback_helper[:feedback] << 2
+      else
+        @feedback_helper[:code] << @code[index].to_i
+        @feedback_helper[:guess] << guess.to_i
+      end
+    end
+  end
+
+  def find_detail_for_wrong
+    wrong_number = array_difference(@feedback_helper[:code], @feedback_helper[:guess])
+    right_number_wrong_spot = 4 - @feedback_helper[:feedback].count - wrong_number
+
+    @feedback_helper[:feedback] += [1] * right_number_wrong_spot
+    @feedback_helper[:feedback] += [0] * wrong_number
+  end
+
+  def count_guesses(array)
+    array.reduce(Hash.new(0)) do |number, occur|
+      number[occur] += 1
+      number
+    end
+  end
+end
+
 class Game
-  def initialize(player, code_object)
+  include Feedback
+
+  def initialize(player, computer_player, code_object)
     @player = player
     @code_object = code_object
     @code = code_object.code
@@ -7,22 +45,28 @@ class Game
     @guesses_by_round = {}
     @feedback_by_round = {}
     @feedback_helper = {}
-    @round_limit = 12
+    @round_limit = 3
     @code_broken = 'no'
     @human_role = 1
+    @computer_player = computer_player
   end
 
   def play_game
-    opening_message
+    # opening_message
     @human_role = @player.choose_role.to_i
     assign_code
     p @code
     while @round <= @round_limit && @code_broken == 'no'
       if @human_role == 1
-        human_code_breaker
+        gets_human_guess
       else
-        computer_code_breaker
+        @guesses_by_round[@round] = @computer_player.generate_computer_guess(
+          @round, @guesses_by_round, @feedback_by_round
+        )
       end
+      @feedback_by_round[@round] = determine_feedback(@guesses_by_round[@round])
+      check_for_broken_code(@feedback_by_round[@round])
+      give_feedback
       @round += 1
     end
     endgame_check_for_winner
@@ -34,22 +78,6 @@ class Game
             else
               assign_human_code
             end
-  end
-
-  def computer_code_breaker
-    generate_computer_guess
-    determine_feedback
-    give_feedback
-  end
-  
-  def human_code_breaker
-    gets_human_guess
-    determine_feedback
-    give_feedback
-  end
-
-  def generate_computer_guess
-    @guesses_by_round[@round] = [rand(1..6), rand(1..6), rand(1..6), rand(1..6)]
   end
 
   def assign_human_code
@@ -66,7 +94,10 @@ class Game
     human_code
   end
 
-
+  def check_for_broken_code(feedback)
+    hash = count_guesses(feedback)
+    @code_broken = 'yes' if hash[2] == 4
+  end
 
   def endgame_check_for_winner
     if @code_broken == 'yes' && @human_role == 1
@@ -89,43 +120,6 @@ class Game
       puts "Feedback: #{@feedback_by_round[i]}."
       puts ''
       i += 1
-    end
-  end
-
-  def determine_feedback
-    @feedback_by_round[@round] = []
-    @feedback_helper = { code: [], guess: [] }
-    find_right_create_helper
-    if @feedback_by_round[@round].count == 4
-      @code_broken = 'yes'
-    else
-      find_detail_for_wrong
-    end
-  end
-
-  def find_right_create_helper
-    @guesses_by_round[@round].each_with_index do |guess, index|
-      if guess.to_i == @code[index].to_i
-        @feedback_by_round[@round] << 2
-      else
-        @feedback_helper[:code] << @code[index].to_i
-        @feedback_helper[:guess] << guess.to_i
-      end
-    end
-  end
-
-  def find_detail_for_wrong
-    wrong_number = array_difference(@feedback_helper[:code], @feedback_helper[:guess])
-    right_number_wrong_spot = 4 - @feedback_by_round[@round].count - wrong_number
-
-    @feedback_by_round[@round] += [1] * right_number_wrong_spot
-    @feedback_by_round[@round] += [0] * wrong_number
-  end
-
-  def count_guesses(array)
-    array.reduce(Hash.new(0)) do |number, occur|
-      number[occur] += 1
-      number
     end
   end
 
@@ -177,7 +171,7 @@ class Game
   end
 end
 
-#player
+# player
 class Player
   def initialize; end
 
@@ -212,6 +206,41 @@ class Player
   end
 end
 
+# comp player
+class ComputerPlayer
+  include Feedback
+
+  def initialize
+    @set_of_possible = [1, 2, 3, 4, 5, 6].repeated_permutation(4).to_a
+  end
+
+  def generate_computer_guess(round, guesses, feedback)
+    # create_set_of_possible
+    # p @set_of_possible
+    if round == 1
+      [1, 1, 2, 2]
+    else
+      eliminate_impossible_arrays(round, guesses, feedback)
+    end
+  end
+
+  def eliminate_impossible_arrays(round, guesses, feedback)
+    # guesses
+    p @set_of_possible.include?([1, 1, 2, 2])
+    p guesses[round - 1]
+    p @set_of_possible.find_index(guesses[round - 1])
+    @set_of_possible.delete_at(@set_of_possible.find_index(guesses[round - 1]))
+    p @set_of_possible.include?([1, 1, 2, 2])
+
+    # @set_of_possible.select! do |array|
+    #   array.include?(1) || array.include?(2) || array.include?(3) || array.include?(4)
+    # end
+    p @set_of_possible
+    p @set_of_possible.count
+    [rand(1..6), rand(1..6), rand(1..6), rand(1..6)]
+  end
+end
+
 # SecretCode
 class Code
   attr_reader :code
@@ -229,6 +258,9 @@ end
 code_object = Code.new
 
 human_player = Player.new
+computer_player = ComputerPlayer.new
 
-game = Game.new(human_player, code_object)
+game = Game.new(human_player, computer_player, code_object)
 game.play_game
+
+# feedback module
