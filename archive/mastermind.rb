@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Count
   def array_to_hash(array)
     array.reduce(Hash.new(0)) do |number, occur|
@@ -158,18 +160,18 @@ class Game
     instructions if gets.chomp == 'yes'
     puts '_____________________________________________'
   end
-end
 
-def instructions
-  puts 'The code consists of 4 numbers between 1 and 6'
-  puts 'You must enter them in the correct order.'
-  puts 'Example: the code might be: [1,1,2,3]'
-  puts 'You will have 12 guesses to crack the code.'
-  puts 'For every guess you will recieve feedback.'
-  puts 'Each 2 means one of your guesses is a correct number in the right spot.'
-  puts 'Each 1 means one of your guesses is a correct number in the wrong spot.'
-  puts 'Each 0 means one of your guesses is an incorrect number.'
-  puts 'The order of the feedback does NOT correspond to the order of your guess.'
+  def instructions
+    puts 'The code consists of 4 numbers between 1 and 6'
+    puts 'You must enter them in the correct order.'
+    puts 'Example: the code might be: [1,1,2,3]'
+    puts 'You will have 12 guesses to crack the code.'
+    puts 'For every guess you will recieve feedback.'
+    puts 'Each 2 means one of your guesses is a correct number in the right spot.'
+    puts 'Each 1 means one of your guesses is a correct number in the wrong spot.'
+    puts 'Each 0 means one of your guesses is an incorrect number.'
+    puts 'The order of the feedback does NOT correspond to the order of your guess.'
+  end
 end
 
 # player
