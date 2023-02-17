@@ -28,6 +28,9 @@ class Game
         @guesses_by_round[@round] = @computer_player.generate_computer_guess(
           @round, @guesses_by_round, @feedback_by_round
         )
+        puts "****************** Round #{@round} ******************"
+        sleep(2)
+        puts "The Computer guessed: #{@guesses_by_round[@round].join}"
       end
       @feedback_by_round[@round] = determine_feedback(@guesses_by_round[@round])
       check_for_broken_code(@feedback_by_round[@round])
@@ -75,14 +78,7 @@ class Game
     puts '*********************************************'
     puts '************* Secret Code Entry *************'
     puts '*********************************************'
-    human_code = []
-    i = 0
-    while i < 4
-      puts "What is your entry for position #{i + 1}?"
-      human_code[i] = @player.ask_for_entry
-      i += 1
-    end
-    human_code
+    @player.ask_for_entry.split('')
   end
 
   def check_for_broken_code(feedback)
@@ -103,15 +99,15 @@ class Game
   end
 
   def give_feedback
-    i = 1
-    puts ''
-    while i <= @round
-      puts "Round #{i}"
-      puts "Guesses: #{@guesses_by_round[i]}"
-      puts "Feedback: #{@feedback_by_round[i]}"
-      puts ''
-      i += 1
-    end
+    # i = 1
+    # puts ''
+    # while i <= @round
+      # puts "Round #{@round}"
+      # puts "Guesses: #{@guesses_by_round[i]}"
+    puts "Feedback: #{@feedback_by_round[@round]}"
+      # puts ''
+    #   i += 1
+    # end
   end
 
   def array_difference(code, guess)
@@ -127,17 +123,10 @@ class Game
   end
 
   def gets_human_guess
-    @guesses_by_round[@round] = Array.new(4)
-    puts '*********************************************'
+    # puts '*********************************************'
     puts "****************** Round #{@round} ******************"
-    puts '*********************************************'
-
-    i = 0
-    while i < 4
-      puts "What is your guess for position #{i + 1}?"
-      @guesses_by_round[@round][i] = @player.ask_for_entry
-      i += 1
-    end
+    # puts '*********************************************'
+    @guesses_by_round[@round] = @player.ask_for_entry.split('')
   end
 
   def opening_message
@@ -150,11 +139,11 @@ class Game
     instructions if gets.chomp == 'yes'
     puts '_____________________________________________'
   end
-  
+
   def instructions
     puts 'The code consists of 4 numbers between 1 and 6'
     puts 'You must enter them in the correct order.'
-    puts 'Example: the code might be: [1,1,2,3]'
+    puts 'Example: the code might be: 1123'
     puts 'You will have 12 guesses to crack the code.'
     puts 'For every guess you will recieve feedback.'
     puts 'Each 2 means one of your guesses is a correct number in the right spot.'

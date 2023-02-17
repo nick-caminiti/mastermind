@@ -7,9 +7,9 @@ class Player
     pass = 0
     until pass == 1
       begin
-        guess = Kernel.gets.chomp.match(/^[1-6]{1}$/)[0]
+        guess = Kernel.gets.chomp.match(/^[1-6]{4}$/)[0]
       rescue StandardError => _e
-        puts 'Your entry must be a number between 1-6. Please try again.'
+        puts 'Your entry must be a 4 numbers between 1-6. Please try again.'
       else
         pass = 1
         return guess
