@@ -7,7 +7,6 @@ class Game
     @player = Player.new
     @code_object = Code.new
     @computer_player = ComputerPlayer.new
-    @code = @code_object.code
     @round = 1
     @guesses_by_round = {}
     @feedback_by_round = {}
@@ -20,24 +19,32 @@ class Game
   def play_game
     opening_message
     @human_role = @player.choose_role.to_i
-    assign_code
+    assign_secret_code
     while @round <= @round_limit && @code_broken == 'no'
+      puts "****************** Round #{@round} ******************"
       if @human_role == 1
-        gets_human_guess
+        @guesses_by_round[@round] = @player.ask_for_entry.split('')
       else
-        @guesses_by_round[@round] = @computer_player.generate_computer_guess(
-          @round, @guesses_by_round, @feedback_by_round
-        )
-        puts "****************** Round #{@round} ******************"
-        sleep(2)
-        puts "The Computer guessed: #{@guesses_by_round[@round].join}"
+        computer_guessing_turn
       end
-      @feedback_by_round[@round] = determine_feedback(@guesses_by_round[@round])
-      check_for_broken_code(@feedback_by_round[@round])
-      give_feedback
+      determine_and_give_feedback
       @round += 1
     end
     endgame_check_for_winner
+  end
+
+  def computer_guessing_turn
+    @guesses_by_round[@round] = @computer_player.generate_computer_guess(
+      @round, @guesses_by_round, @feedback_by_round
+    )
+    sleep(2)
+    puts "The Computer guessed: #{@guesses_by_round[@round].join}"
+  end
+
+  def determine_and_give_feedback
+    @feedback_by_round[@round] = determine_feedback(@guesses_by_round[@round])
+    check_for_broken_code(@feedback_by_round[@round])
+    puts "Feedback: #{@feedback_by_round[@round]}"
   end
 
   def determine_feedback(guess_array)
@@ -66,7 +73,7 @@ class Game
     @feedback_helper[:feedback] += [0] * wrong_number
   end
 
-  def assign_code
+  def assign_secret_code
     @code = if @human_role == 1
               @code_object.generate_random_code
             else
@@ -98,18 +105,6 @@ class Game
     end
   end
 
-  def give_feedback
-    # i = 1
-    # puts ''
-    # while i <= @round
-      # puts "Round #{@round}"
-      # puts "Guesses: #{@guesses_by_round[i]}"
-    puts "Feedback: #{@feedback_by_round[@round]}"
-      # puts ''
-    #   i += 1
-    # end
-  end
-
   def array_difference(code, guess)
     code_hash = array_to_hash(code)
     guess_hash = array_to_hash(guess)
@@ -120,13 +115,6 @@ class Game
       i += 1
     end
     wrong_number
-  end
-
-  def gets_human_guess
-    # puts '*********************************************'
-    puts "****************** Round #{@round} ******************"
-    # puts '*********************************************'
-    @guesses_by_round[@round] = @player.ask_for_entry.split('')
   end
 
   def opening_message
@@ -141,14 +129,15 @@ class Game
   end
 
   def instructions
-    puts 'The code consists of 4 numbers between 1 and 6'
+    puts 'The code consists of 4 numbers between 1 and 6 (numbers can be duplicated).'
     puts 'You must enter them in the correct order.'
-    puts 'Example: the code might be: 1123'
+    puts 'Example: the code might be 1123'
     puts 'You will have 12 guesses to crack the code.'
     puts 'For every guess you will recieve feedback.'
     puts 'Each 2 means one of your guesses is a correct number in the right spot.'
     puts 'Each 1 means one of your guesses is a correct number in the wrong spot.'
     puts 'Each 0 means one of your guesses is an incorrect number.'
     puts 'The order of the feedback does NOT correspond to the order of your guess.'
+    puts "Example: a guess of '3142' with feedback '[2],[1],[1],[0]' does NOT necessarily mean the 3 is in the correct position."
   end
 end
